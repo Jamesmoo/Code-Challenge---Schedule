@@ -46,7 +46,7 @@ public class DailySchedule {
      * Takes a line read from a CSV and process it into the availability list
      * @param fileLine String from CSV in format: Kyle,1:30PM,4PM
      */
-    public void setPersonSchedule(String fileLine){
+    protected void setPersonSchedule(String fileLine){
         String name = "";
         String meetingTimes = "";
 
@@ -96,25 +96,11 @@ public class DailySchedule {
         ArrayList<LinkedHashMap<String, String>> availability = getAvailabilityByTimeOfDay();
 
         try{
-            if(availability.get(0) != null){
-                jsonResults.append("am_before_work", availability.get(0));
-            }
-
-            if(availability.get(1) != null){
-                jsonResults.append("am_in_office", availability.get(1));
-            }
-
-            if(availability.get(2) != null){
-                jsonResults.append("lunch", availability.get(2));
-            }
-
-            if(availability.get(3) != null){
-                jsonResults.append("pm_in_office", availability.get(3));
-            }
-
-            if(availability.get(4) != null){
-                jsonResults.append("pm_after_work", availability.get(4));
-            }
+            jsonResults.append("am_before_work", availability.get(0));
+            jsonResults.append("am_in_office", availability.get(1));
+            jsonResults.append("lunch", availability.get(2));
+            jsonResults.append("pm_in_office", availability.get(3));
+            jsonResults.append("pm_after_work", availability.get(4));
 
         }catch(JSONException jse){
             Log.debug("Unable to add availability to json object");
@@ -167,5 +153,14 @@ public class DailySchedule {
         results.add(nightAfterWork);
 
         return results;
+    }
+
+    /**
+     * Get all the people at a specific time
+     * @param hour in the format 4:00PM
+     * @return
+     */
+    protected String getScheduleByHour(String hour){
+        return hourAvailability.get(hour);
     }
 }

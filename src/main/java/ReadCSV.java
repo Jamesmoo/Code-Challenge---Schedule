@@ -21,8 +21,7 @@ public class ReadCSV {
      */
     public void startFileRead(DailySchedule dailySchedule){
         try{
-            ClassLoader classLoader = getClass().getClassLoader();
-            File file = new File(classLoader.getResource(fileName).getFile());
+            File file = new File(fileName);
 
             Scanner scanner = new Scanner(file);
             while (scanner.hasNextLine()) {
@@ -40,10 +39,10 @@ public class ReadCSV {
     /**
      * Standardizes the times
      * Since the input file can contain 9pm as a valid time, want to change it to be 9:00PM to be uniform
-     * @param line a single line as read by the file
+     * @param line a single line as read by the file: james,4PM
      * @return
      */
-    private String fixTime(String line){
+    protected String fixTime(String line){
         String [] nameAndTimes = line.split(",");
         line = nameAndTimes[0];
 
