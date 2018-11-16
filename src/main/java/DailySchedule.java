@@ -1,4 +1,5 @@
-import org.json.JSONArray;
+import com.oracle.tools.packager.Log;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -7,7 +8,6 @@ import java.util.Map;
 
 public class DailySchedule {
     private LinkedHashMap<String, String> hourAvailability;
-    private JSONObject jsonResults;
 
     public DailySchedule(){
         setHours();
@@ -42,15 +42,24 @@ public class DailySchedule {
         }
     }
 
-
-
     /**
      * Takes a line read from a CSV and process it into the availability list
      * @param fileLine String from CSV in format: Kyle,1:30PM,4PM
      */
     public void setPersonSchedule(String fileLine){
-        String name = fileLine.substring(0, fileLine.indexOf(','));
-        String meetingTimes = fileLine.substring(fileLine.indexOf(','));
+        String name = "";
+        String meetingTimes = "";
+
+        //scanner removes the trailing comma, have to account for that when a person is fully available
+        if(fileLine.contains(",")){
+            //have meetings
+            name = fileLine.substring(0, fileLine.indexOf(','));
+            meetingTimes = fileLine.substring(fileLine.indexOf(','));
+
+        }else{
+            //fully available
+            name = fileLine;
+        }
 
         for (Map.Entry<String, String> entry : hourAvailability.entrySet()) {
             String key = entry.getKey();
@@ -78,15 +87,44 @@ public class DailySchedule {
         hourAvailability.put(hour, peopleAvailable);
     }
 
+    /**
+     * Process the main schedule into a single object
+     * @return JSONobject containing all hours that have 3 or more people available in each of the 5 sections of the day
+     */
     public JSONObject getResultsAsJson(){
-        jsonResults = new JSONObject();
+        JSONObject jsonResults = new JSONObject();
         ArrayList<LinkedHashMap<String, String>> availability = getAvailabilityByTimeOfDay();
 
-        JSONArray
+        try{
+            if(availability.get(0) != null){
+                jsonResults.append("am_before_work", availability.get(0));
+            }
+
+            if(availability.get(1) != null){
+                jsonResults.append("am_in_office", availability.get(1));
+            }
+
+            if(availability.get(2) != null){
+                jsonResults.append("lunch", availability.get(2));
+            }
+
+            if(availability.get(3) != null){
+                jsonResults.append("pm_in_office", availability.get(3));
+            }
+
+            if(availability.get(4) != null){
+                jsonResults.append("pm_after_work", availability.get(4));
+            }
+
+        }catch(JSONException jse){
+            Log.debug("Unable to add availability to json object");
+        }
+
+        return jsonResults;
     }
 
     /**
-     * Divide the day into 5 sections, a list for each, makes it easier to organize a JSON file
+     * Divide the day into 5 sections, a list for each, makes it easier to organize a JSON object later
      * @return ArrayList of LinkedHashMaps that each is a part of the day and availability
      */
     private ArrayList<LinkedHashMap<String, String>> getAvailabilityByTimeOfDay(){
@@ -129,33 +167,5 @@ public class DailySchedule {
         results.add(nightAfterWork);
 
         return results;
-    }
-
-    //TODO: Test method - delete before turning in
-    public void printAll(){
-        int count = 0;
-        for (Map.Entry<String, String> entry : hourAvailability.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            int peopleAvailable = value.split(",").length;
-
-            if(count < 16){ //AM - before office hours
-                System.out.println(count + " after " + key + " - " + value);
-                System.out.println("people available" + peopleAvailable);
-            }if(count >= 16 && count < 24){//AM during work
-                System.out.println(count + " during " + key + " - " + value);
-                System.out.println("people available" + peopleAvailable);
-            }if(count >= 24 && count < 26){//Lunch
-                System.out.println(count + " lunch " + key + " - " + value);
-                System.out.println("people available" + peopleAvailable);
-            }if(count >= 26 && count < 35){//PM during office hours
-                System.out.println(count + " during " + key + " - " + value);
-                System.out.println("people available" + peopleAvailable);
-            }if(count >= 35){//PM after work
-                System.out.println(count + " after " + key + " - " + value);
-                System.out.println("people available" + peopleAvailable);
-            }
-            count++;
-        }
     }
 }
